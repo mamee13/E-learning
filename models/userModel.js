@@ -22,14 +22,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please provide a password'],
     minlength: 6,
-    maxlength: 20
+    maxlength: 20,
+    select: false
   },
   passwordConfirm: {
     type: String,
     required: [true, 'Please confirm your password'],
     validate: {
       // This only works on CREATE and SAVE!!!
-      validator: function(el) {
+      validator: function (el) {
         return el === this.password;
       },
       message: 'Passwords are not the same!'
@@ -37,7 +38,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['student', 'teacher', 'admin'],
+    enum: ['student', 'teacher'],
     default: 'student'
   },
   photo: {
@@ -48,6 +49,13 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
+}, {
+  toJSON: {
+    virtuals: true
+  },
+  toObject: {
+    virtuals: true
+  }
 });
 
 userSchema.pre('save', async function (next) {
@@ -55,16 +63,31 @@ userSchema.pre('save', async function (next) {
   if (!user.isModified('password')) {
     return next();
   }
-  const salt = await bcrypt.genSalt(10);
-  const hash = await bcrypt.hash(user.password, salt);
+  const hash = await bcrypt.hash(user.password, 12);
   user.password = hash;
 
   this.passwordConfirm = undefined;
   next();
 });
 
-userSchema.methods.comparePassword = async function (candidatePassword, userPassword) {
+userSchema.methods.correctPassword = async function(
+  candidatePassword,
+  userPassword
+) {
   return await bcrypt.compare(candidatePassword, userPassword);
+};
+userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
+  if (this.passwordChangedAt) {
+    const changedTimestamp = parseInt(
+      this.passwordChangedAt.getTime() / 1000,
+      10
+    );
+
+    return JWTTimestamp < changedTimestamp;
+  }
+
+  // False means NOT changed
+  return false;
 };
 
 const User = mongoose.model('User', userSchema);

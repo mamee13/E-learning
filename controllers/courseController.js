@@ -5,7 +5,7 @@ const AppError = require('../utils/AppError');
 exports.createCourse = async (req, res, next) => {
     const data = await Course.create(req.body);
     res.status(201).json({
-        status:'success',
+        status: 'success',
         data: {
             data
         }
@@ -21,7 +21,7 @@ exports.getAllCourses = catchAsync(async (req, res, next) => {
     }
 
     res.status(200).json({
-        status:'success',
+        status: 'success',
         data: {
             courses: data
         }
@@ -36,7 +36,7 @@ exports.getCourse = catchAsync(async (req, res, next) => {
     }
 
     res.status(200).json({
-        status:'success',
+        status: 'success',
         data: {
             course: data
         }
@@ -54,7 +54,7 @@ exports.updateCourse = catchAsync(async (req, res, next) => {
     }
 
     res.status(200).json({
-        status:'success',
+        status: 'success',
         data: {
             course: data
         }
@@ -69,7 +69,7 @@ exports.deleteCourse = catchAsync(async (req, res, next) => {
     }
 
     res.status(204).json({
-        status:'success',
+        status: 'success',
         data: null
     })
 })

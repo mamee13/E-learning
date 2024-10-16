@@ -24,7 +24,15 @@ const courseSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-});
+},
+  {
+    toJSON: {
+      virtuals: true
+    },
+    toObject: {
+      virtuals: true
+    }
+  });
 
 const Course = mongoose.model('Course', courseSchema);
 
