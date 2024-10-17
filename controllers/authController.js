@@ -1,6 +1,9 @@
 const catchAsync = require('../utils/catchAsync');
 const User = require('../models/userModel');
+
 const AppError = require('../utils/AppError');
+const sendEmail  = require('../utils/sendEmail');
+const crypto = require('crypto');
 
 const jwt = require('jsonwebtoken');
 const { promisify } = require('util');
@@ -11,6 +14,7 @@ const signToken = id => {
         expiresIn: process.env.JWT_EXPIRES_IN
     });
 };
+
 
 const createSendToken = (user, statusCode, req, res) => {
     const token = signToken(user._id);
@@ -34,6 +38,10 @@ const createSendToken = (user, statusCode, req, res) => {
         }
     });
 };
+
+const generateOTP = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString(); 
+ };
 
 exports.protect = catchAsync(async (req, res, next) => {
     // 1) Getting token and check of it's there
@@ -99,6 +107,11 @@ exports.createUser = catchAsync(async (req, res, next) => {
         password: req.body.password,
         passwordConfirm: req.body.passwordConfirm
     });
+
+    const otp = "123456";
+
+    await sendEmail(user.email, otp);
+
     createSendToken(user, 201, req, res);
 });
 
@@ -115,6 +128,8 @@ exports.login = catchAsync(async (req, res, next) => {
     if (!user || !(await user.correctPassword(password, user.password))) {
         return next(new AppError('Incorrect email or password', 401));
     }
+
+    await sendEmail(email, "hey wellcome to our website");
 
     // 3) If everything ok, send token to client
     createSendToken(user, 200, req, res);
