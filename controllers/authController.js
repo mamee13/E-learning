@@ -19,13 +19,13 @@ const signToken = id => {
 const createSendToken = (user, statusCode, req, res) => {
     const token = signToken(user._id);
 
-    res.cookie('jwt', token, {
-      expires: new Date(
-        Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
-      ),
-      httpOnly: true,
-      secure: req.secure || req.headers['x-forwarded-proto'] === 'https'
-    });
+    // res.cookie('jwt', token, {
+    //   expires: new Date(
+    //     Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+    //   ),
+    //   httpOnly: true,
+    //   secure: req.secure || req.headers['x-forwarded-proto'] === 'https'
+    // });
 
     user.password = undefined;
 
@@ -105,6 +105,7 @@ exports.createUser = catchAsync(async (req, res, next) => {
         email: req.body.email,
         password: req.body.password,
         passwordConfirm: req.body.passwordConfirm,
+        
     });
 
     const otpToken = crypto.randomBytes(16).toString('hex');
@@ -113,7 +114,7 @@ exports.createUser = catchAsync(async (req, res, next) => {
         userId: user._id,
         token: otpToken
     });
-    const link = `https://localhost:3000/api/v1/users/verfy-otp/${token.token}`
+    const link = `https://127.0.0.1:3000/api/v1/users/verfy-otp/${token.token}`
 
     await sendEmail(user.email, link);
 
@@ -129,16 +130,18 @@ exports.login = catchAsync(async (req, res, next) => {
     }
     // 2) Check if user exists && password is correct
     const user = await User.findOne({ email }).select('+password');
+    if(!user && !(await user.correctPassword(password, user.password))) {
+        return next(new AppError('Incorrect email or password', 401));
+    }
 
-    if (user && user.verfied) {
-        
-        if (!(await user.correctPassword(password, user.password))) {
-            return next(new AppError('Incorrect email or password', 401));
-         }
+    console.log(user);
+
+    if(!user.verfied) {
+        return next(new AppError('Please verify your email before login', 401));
+    }
         
         // 3) If everything ok, send token to client
         createSendToken(user, 200, req, res);
-    }
 });          
 
 exports.logout = (req, res) => {

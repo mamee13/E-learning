@@ -21,30 +21,54 @@ router.patch('/:id', authController.protect, multerUpload, (req, res, next) => {
         next(); // Call next middleware or handler
     }
        
-}, userController.updateUser); // Call the updateUser controller to handle the rest
+}, userController.updateUser); 
 
-router.get('/verfy-otp/:token', async(req, res) => {
+router.post('/upload', multerUpload, (req, res) => {
+    // Check if a file was uploaded
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded.' });
+    }
+  
+    // Send a success response with the file information
+    res.status(200).json({
+      message: 'File uploaded successfully!',
+      file: req.file,
+    });
+  });// Call the updateUser controller to handle the rest
+
+router.get('/verfy-otp/:token', async (req, res) => {
     try {
-        const token = await Token.findOne({token: req.params.token});
+        const token = await Token.findOne({ token: req.params.token });
         if (!token) {
-            return res.status(400).json({message: 'Invalid token'});
+            return res.status(400).json({ message: 'Invalid token' });
         }
 
         const user = await User.findById(token.userId);
         if (!user) {
-            return res.status(400).json({message: 'User not found'});
+            return res.status(400).json({ message: 'User not found' });
         }
-    
-        await User.findOneAndUpdate({_id: user._id}, {Verified: true});
+        
+
+        // // Ensure update operation is awaited
+        // const updatedUser = await User.findOneAndUpdate(
+        //     {
+        //         email: user.email, 
+        //         verified: true ,
+        //         new: true,
+        //         runValidators: true,
+        //     }
+        // );
+        await User.findByIdAndUpdate(user._id, { verfied: true });
+
+
         await Token.findByIdAndDelete(token._id);
-    
-        return res.status(200).json({message: 'User verified successfully'});
+
+        return res.status(200).json({ message: 'User verified successfully' });
 
     } catch (error) {
         console.log(error);
-        return res.status(500).json({message: 'Something went wrong'});
+        return res.status(500).json({ message: 'Something went wrong' , error: error.message});
     }
-
 });
 
 router.post('/register', authController.createUser);
