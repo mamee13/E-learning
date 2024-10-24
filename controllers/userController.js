@@ -38,7 +38,7 @@ exports.updateUser = catchAsync(async (req, res, next) => {
     if (req.fileName) {
         // If there is a file, include the filename in the updates
         const photoPath = path.join('uploads', req.fileName);
-        updates.photo = req.fileName; // Assuming you want to save the photo's filename
+        updates.photo = photoPath; // Assuming you want to save the photo's filename
     }
 
     const user = await User.findByIdAndUpdate(req.params.id, updates, {

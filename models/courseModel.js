@@ -12,7 +12,8 @@ const courseSchema = new mongoose.Schema({
     message: 'Please enter the course description',
   },
   instructor: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     required: true,
   },
   price: {
@@ -20,6 +21,7 @@ const courseSchema = new mongoose.Schema({
     required: false,
     default: 0,
   },
+  videos:[],
   createdAt: {
     type: Date,
     default: Date.now,
